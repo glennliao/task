@@ -6,7 +6,7 @@ import (
 	"github.com/glennliao/task/tasker"
 )
 
-const VERSION = "1.0.0"
+const VERSION = "1.1.0"
 
 //go:embed tasker.js
 var taskerJs string
@@ -17,7 +17,8 @@ func main() {
 
 	t := tasker.Tasker{}
 	t.Init(taskerJs)
-	t.Load()
-	t.Run()
-
+	ok := t.Load()
+	if ok {
+		t.Run()
+	}
 }

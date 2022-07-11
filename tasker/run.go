@@ -1,8 +1,10 @@
 package tasker
 
 import (
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/glennliao/task/tasker/op"
+	"github.com/manifoldco/promptui"
 	"log"
 	"os"
 	"strings"
@@ -36,7 +38,29 @@ func (t *Tasker) Run() {
 			for _, t := range matchPrefixTaskList {
 				nameList = append(nameList, t.Name)
 			}
-			log.Fatalf("many task with prefix %v : %v", taskName, nameList)
+
+			nameList = append(nameList, "[Cancel]")
+
+			prompt := promptui.Select{
+				Label:        fmt.Sprintf("many task with prefix %v , choose one ?", taskName),
+				Items:        nameList,
+				HideHelp:     true,
+				HideSelected: true,
+			}
+
+			_, result, err := prompt.Run()
+
+			if err != nil {
+				fmt.Printf("Prompt failed %v\n", err)
+				log.Fatal(err)
+			}
+
+			if result == "[Cancel]" {
+				return
+			}
+
+			task = t.taskMap[result]
+
 		}
 
 	}

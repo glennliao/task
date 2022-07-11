@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/fatih/color"
-	"golang.org/x/text/encoding/simplifiedchinese"
+	"github.com/glennliao/task/tasker/util"
 	"io"
 	"os/exec"
 	"runtime"
@@ -15,13 +15,11 @@ func init() {
 	AddOp(Op{
 		Name: "cmd",
 		Handler: func(args []string) {
-			color.Green("# %s %v\n", "cmd", args[0])
+			color.Green("# %s %v\n", "[cmd]", args[0])
 			Cmd(args)
 		},
 	})
 }
-
-// https://developer.aliyun.com/article/934186
 
 func Cmd(args []string) {
 	var cmd *exec.Cmd
@@ -32,6 +30,11 @@ func Cmd(args []string) {
 	}
 
 	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		panic(err)
+	}
+
+	errout, err := cmd.StderrPipe()
 	if err != nil {
 		panic(err)
 	}
@@ -47,12 +50,26 @@ func Cmd(args []string) {
 			if err != nil || err == io.EOF {
 				return
 			}
-			fmt.Print(ConvertByte2String([]byte(readString), GB18030))
+			fmt.Print(util.Convert2Utf8Str(readString))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		reader := bufio.NewReader(errout)
+		for {
+			readString, err := reader.ReadString('\n')
+			if err != nil || err == io.EOF {
+				return
+			}
+			fmt.Print(util.Convert2Utf8Str(readString))
 		}
 	}()
 
 	err = cmd.Start()
-
+	if err != nil {
+		panic(err)
+	}
 	err = cmd.Wait()
 	if err != nil {
 		panic(err)
@@ -63,25 +80,4 @@ func Cmd(args []string) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-type Charset string
-
-const (
-	UTF8    = Charset("UTF-8")
-	GB18030 = Charset("GB18030")
-)
-
-func ConvertByte2String(byte []byte, charset Charset) string {
-	var str string
-	switch charset {
-	case GB18030:
-		var decodeBytes, _ = simplifiedchinese.GB18030.NewDecoder().Bytes(byte)
-		str = string(decodeBytes)
-	case UTF8:
-		fallthrough
-	default:
-		str = string(byte)
-	}
-	return str
 }

@@ -1,15 +1,47 @@
 package tasker
 
 import (
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/glennliao/task/tasker/op"
 	"github.com/glennliao/task/tasker/util"
+	"github.com/manifoldco/promptui"
+	"log"
+	"os"
 	"path/filepath"
 )
 
-func (t *Tasker) Load() {
+func (t *Tasker) Load() bool {
 
 	t.taskMap = map[string]*Task{}
+
+	if !util.FileExist(TaskFileName) {
+		prompt := promptui.Select{
+			Label:        "taskfile.js not found... , so ?",
+			Items:        []string{"Create It", "Cancel"},
+			HideHelp:     true,
+			HideSelected: true,
+		}
+
+		_, result, err := prompt.Run()
+
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			return false
+		}
+
+		if result == "Create It" {
+			f, err := os.Create(TaskFileName)
+			if err != nil {
+				panic(err)
+			}
+			f.WriteString("task(\"default\")\n\t.cmd(\"ls\")")
+			f.Close()
+		}
+
+		return false
+
+	}
 
 	taskFile, err := util.LoadJsFile(TaskFileName)
 
@@ -26,6 +58,8 @@ func (t *Tasker) Load() {
 	if err != nil {
 		panic(err)
 	}
+
+	return true
 }
 
 func (t *Tasker) initJsVm(vm *goja.Runtime) {
@@ -42,7 +76,12 @@ func (t *Tasker) initJsVm(vm *goja.Runtime) {
 
 		useName := call.Argument(0).String()
 
-		taskFile, err := util.LoadJsFile(filepath.Join(t.configUseRoot, useName+".js"))
+		jsFilePath := filepath.Join(t.configUseRoot, useName+".js")
+		if !util.FileExist(jsFilePath) {
+			log.Fatal("oh! [use] file is miss: " + useName + ".js")
+		}
+
+		taskFile, err := util.LoadJsFile(jsFilePath)
 		if err != nil {
 			panic(err)
 		}
@@ -51,7 +90,6 @@ func (t *Tasker) initJsVm(vm *goja.Runtime) {
 		if err != nil {
 			panic(err)
 		}
-
 		return goja.Undefined()
 	})
 
@@ -71,7 +109,6 @@ func (t *Tasker) taskerJsObject(vm *goja.Runtime) *goja.Object {
 				Op:   op.Name,
 				Args: args,
 			})
-
 			return call.This
 		})
 	}
