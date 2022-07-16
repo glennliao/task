@@ -9,7 +9,7 @@ import (
 
 var logger = util.Logger{}
 
-func (t *Tasker) Init(taskerJs string) {
+func (t *Tasker) Init(taskerJs string, taskerDTS string) {
 	dir, _ := homedir.Dir()
 
 	var ConfigRoot = filepath.Join(dir, ConfigParentDir)
@@ -21,10 +21,10 @@ func (t *Tasker) Init(taskerJs string) {
 
 	t.taskerJs = taskerJs
 
-	f, err := os.Create(filepath.Join(t.configRoot, ConfigTaskerJsFilename))
+	f, err := os.Create(filepath.Join(t.configRoot, "tasker.d.ts")) //ConfigTaskerJsFilename))
 	if err != nil {
 		panic(err)
 	}
-	f.WriteString(taskerJs)
+	f.WriteString(taskerDTS)
 	f.Close()
 }

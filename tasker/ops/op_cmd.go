@@ -1,23 +1,24 @@
-package op
+package ops
 
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/glennliao/task/tasker/op"
 	"github.com/glennliao/task/tasker/util"
 	"io"
-	"os"
 	"log"
+	"os"
 	"os/exec"
 	"runtime"
 	"sync"
 )
 
 func init() {
-	AddOp(Op{
+	op.AddOp(op.Op{
 		Name: "cmd",
-		Handler: func(args []string) {
+		Handler: func(ctx op.Context, args []string) {
 			color.Green(" # %s %v\n", "[cmd]", args[0])
 			Cmd(args)
 		},

@@ -3,9 +3,7 @@ package tasker
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/glennliao/task/tasker/op"
 	"github.com/manifoldco/promptui"
-	"log"
 	"strings"
 )
 
@@ -64,18 +62,16 @@ func (t *Tasker) Run(taskName string) {
 }
 
 func (t *Tasker) runTask(task *Task) {
+	t.runTaskList = append(t.runTaskList, task.Name)
 	color.Blue("「 ------- %v ------- 」\n", task.Name)
-	for _, step := range task.Steps {
-		if step.Op == "need" {
-			taskName := step.Args[0]
-			task, ok := t.taskMap[taskName]
-			if !ok {
-				log.Fatal("task " + taskName + " no exists")
-			}
-			t.runTask(task)
-		} else {
-			//color.Cyan(" # %d. %-8s %v", i+1, step.Op, step.Args)
-			op.OpsRegisterMap[step.Op].Handler(step.Args)
-		}
+
+	t.vm.Set("currentTask", task.Name)
+
+	_, err := t.vm.RunString(t.taskFile)
+	if err != nil {
+		panic(err)
 	}
+
+	t.runTaskList = t.runTaskList[0 : len(t.runTaskList)-1]
+
 }

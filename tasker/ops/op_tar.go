@@ -1,9 +1,11 @@
-package op
+package ops
 
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
+	"github.com/glennliao/task/tasker/op"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,16 +20,28 @@ tar
 .tar.gz  use gzip
 */
 
+type TarOption struct {
+	Cwd string
+}
+
 func init() {
-	AddOp(Op{
+	op.AddOp(op.Op{
 		Name: "tar",
-		Handler: func(args []string) {
-			Tar(args[1], args[0])
+		Handler: func(ctx op.Context, args []string) {
+			var opt TarOption
+			json.Unmarshal([]byte(args[2]), &opt)
+			Tar(args[1], args[0], opt)
 		},
 	})
 }
 
-func Tar(dest string, src ...string) error {
+func Tar(dest string, srcStr string, option TarOption) error {
+	src := strings.Split(srcStr, ",")
+
+	if option.Cwd != "" {
+		dest = filepath.Join(option.Cwd, dest)
+	}
+
 	tarFile, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -54,6 +68,7 @@ func Tar(dest string, src ...string) error {
 	for _, path := range src {
 		// validate path
 		path = filepath.Clean(path)
+		path = filepath.Join(option.Cwd, path)
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			fmt.Println(err)
@@ -80,15 +95,18 @@ func Tar(dest string, src ...string) error {
 			}
 
 			// -C
-			//relFilePath := file
-			//if filepath.IsAbs(path) {
-			//	relFilePath, err = filepath.Rel(path, file)
-			//	if err != nil {
-			//		return err
-			//	}
-			//}
-			// ensure header has relative file path
-			//hdr.Name = relFilePath
+			relFilePath := file
+			if filepath.IsAbs(path) {
+				relFilePath, err = filepath.Rel(path, file)
+				if err != nil {
+					return err
+				}
+			}
+			if option.Cwd != "" {
+				relFilePath, _ = filepath.Rel(option.Cwd, relFilePath)
+			}
+			//ensure header has relative file path
+			hdr.Name = relFilePath
 
 			if err := tw.WriteHeader(hdr); err != nil {
 				return err

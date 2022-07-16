@@ -1,6 +1,7 @@
 package tasker
 
 import (
+	"context"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/glennliao/task/tasker/op"
@@ -38,19 +39,23 @@ func (t *Tasker) Load(taskFile string) bool {
 			f.WriteString("task(\"default\")\n\t.cmd(\"ls\")")
 			f.Close()
 		}
-
 		return false
-
 	}
 
 	taskFile, err := util.LoadJsFile(taskFile)
+
+	t.taskFile = fmt.Sprintf("(()=>{%s\n})()", taskFile)
 
 	if err != nil {
 		panic(err)
 	}
 
 	vm := goja.New()
+
+	t.vm = vm
+
 	t.initJsVm(vm)
+	vm.Set("currentTask", "")
 
 	_, err = vm.RunString(t.taskerJs)
 
@@ -86,7 +91,7 @@ func (t *Tasker) initJsVm(vm *goja.Runtime) {
 			panic(err)
 		}
 		vm.GlobalObject().Set("opt", call.Argument(1).Export().(map[string]any))
-		_, err = vm.RunString(taskFile)
+		_, err = vm.RunString(fmt.Sprintf("(()=>{%s\n})()", taskFile))
 		if err != nil {
 			panic(err)
 		}
@@ -94,6 +99,17 @@ func (t *Tasker) initJsVm(vm *goja.Runtime) {
 	})
 
 	vm.Set("_tasker", tasker)
+
+	console := vm.NewObject()
+	console.Set("log", func(call goja.FunctionCall) goja.Value {
+		var out []any
+		for _, argument := range call.Arguments {
+			out = append(out, argument.String())
+		}
+		log.Println(out...)
+		return goja.Undefined()
+	})
+	vm.Set("console", console)
 }
 
 func (t *Tasker) taskerJsObject(vm *goja.Runtime) *goja.Object {
@@ -105,13 +121,36 @@ func (t *Tasker) taskerJsObject(vm *goja.Runtime) *goja.Object {
 			for _, arg := range call.Arguments {
 				args = append(args, arg.String())
 			}
-			t.curTask.Steps = append(t.curTask.Steps, Step{
-				Op:   op.Name,
-				Args: args,
-			})
-			return call.This
+			retVal := call.This
+			ctx := &TaskContext{tasker: t, VM: vm, retVal: retVal, oriCall: &call}
+			op.Handler(ctx, args)
+			return ctx.retVal
 		})
 	}
 
 	return obj
+}
+
+type TaskContext struct {
+	context.Context
+	tasker  *Tasker
+	VM      *goja.Runtime
+	retVal  goja.Value
+	oriCall *goja.FunctionCall
+}
+
+func (c *TaskContext) RunTask(name string) {
+	c.tasker.Run(name)
+}
+
+func (c *TaskContext) GetVM() *goja.Runtime {
+	return c.VM
+}
+
+func (c *TaskContext) SetRetVal(val goja.Value) {
+	c.retVal = val
+}
+
+func (c *TaskContext) GetOriCall() *goja.FunctionCall {
+	return c.oriCall
 }

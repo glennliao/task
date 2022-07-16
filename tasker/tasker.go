@@ -1,5 +1,10 @@
 package tasker
 
+import (
+	"github.com/dop251/goja"
+	_ "github.com/glennliao/task/tasker/ops"
+)
+
 const (
 	ConfigParentDir        = ".config"
 	ConfigDir              = "tasker"
@@ -12,8 +17,11 @@ type Tasker struct {
 	configRoot    string
 	configUseRoot string
 	taskerJs      string
+	taskFile      string
 	curTask       *Task
 	taskMap       map[string]*Task
+	runTaskList   []string
+	vm            *goja.Runtime
 }
 
 type Step struct {

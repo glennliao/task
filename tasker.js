@@ -1,97 +1,83 @@
-function task(taskName){
+function task(taskName) {
     _tasker.new(taskName)
 
-    function sshClient(steps){
-        return {
-            upload(src,dest){
-                steps.push({
-                    op:"upload",
-                    args:[src,dest]
-                })
-                return this
-            },
-            cmd(str){
-                steps.push({
-                    op:"cmd",
-                    args:[str]
-                })
-                return this
-            },
-            cd(str){
-                steps.push({
-                    op:"cd",
-                    args:[str]
-                })
-                return this
-            }
-            // download(src,dest){
-            //     ssh.scpDown(src,dest)
-            //     return this
-            // }
-        }
-    }
 
-    return {
-
-        custom(call){
+    let methods = {
+        custom(call) {
             call(this)
             return this
         },
 
-        need(task){
+        need(task) {
             _tasker.need(task)
             return this
         },
 
-        cmd(cmdStr,option={}){
-            _tasker.cmd(cmdStr,JSON.stringify(option))
+        cmd(cmdStr, option = {}) {
+            _tasker.cmd(cmdStr, JSON.stringify(option))
             return this
         },
 
 
-        rm(path){
+        rm(path) {
             _tasker.rm(path)
             return this
         },
 
-        tar(src , dest){
-            _tasker.tar(src,dest)
+        tar(src, dest, option = {}) {
+            _tasker.tar(src, dest, JSON.stringify(option))
             return this
         },
 
-        ssh(host, password, call){
-            let sshSteps = []
-
-            let client = sshClient(sshSteps)
-            call(client)
-
-            _tasker.ssh(host, password,JSON.stringify(sshSteps))
-            return this
-        },
-        test(test){
-            _tasker.test(test)
+        ssh(host, password, call) {
+            let client = _tasker.ssh(host, password)
+            call(client, this)
             return this
         },
 
-        echo(msg){
+
+        echo(msg) {
             _tasker.echo(msg)
             return this
         },
-        mv(src,dist){
-            _tasker.mv(src,dist)
+        mv(src, dest) {
+            _tasker.mv(src, dest)
             return this
         },
-        sleep(sec){
+        sleep(sec) {
             _tasker.sleep(sec)
             return this
         },
-        env(env){
+        env(env) {
             _tasker.env(JSON.stringify(env))
             return this
+        },
+        glob(pattern, call) {
+            let list = _tasker.glob(pattern)
+            call(list, this)
+            return this
+        },
+        abort(msg) {
+            _tasker.abort(msg)
+        },
+        watch(pattern, call) {
+            _tasker.watch(pattern,(e)=>{
+                call(e,this)
+            })
         }
     }
+
+    if (taskName !== currentTask) {
+        let _methods = {}
+        Object.keys(methods).forEach(k => {
+            _methods[k] = () => _methods
+        })
+        return _methods
+    }
+
+    return methods
 }
 
-function use(name, opt={}){
-    _tasker.use(name,opt)
+function use(name, opt = {}) {
+    _tasker.use(name, opt)
 }

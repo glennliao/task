@@ -8,10 +8,13 @@ import (
 	"os"
 )
 
-const VERSION = "1.1.1"
+const VERSION = "1.2.0"
 
 //go:embed tasker.js
 var taskerJs string
+
+//go:embed tasker.d.ts
+var taskerDTS string
 
 var taskFile = "./taskfile.js"
 var taskName = ""
@@ -56,7 +59,7 @@ func main() {
 
 	if taskName != "" {
 		t := tasker.Tasker{}
-		t.Init(taskerJs)
+		t.Init(taskerJs, taskerDTS)
 		ok := t.Load(taskFile)
 		if ok {
 			t.Run(taskName)

@@ -1,14 +1,15 @@
-package op
+package ops
 
 import (
+	"github.com/glennliao/task/tasker/op"
 	"strconv"
 	"time"
 )
 
 func init() {
-	AddOp(Op{
+	op.AddOp(op.Op{
 		Name: "sleep",
-		Handler: func(args []string) {
+		Handler: func(ctx op.Context, args []string) {
 			num, err := strconv.Atoi(args[0])
 			if err != nil {
 				panic(err)

@@ -1,4 +1,4 @@
-package op
+package ops
 
 import (
 	"github.com/fatih/color"
@@ -15,7 +15,7 @@ func TestCmd(t *testing.T) {
 }
 
 func TestTar(t *testing.T) {
-	Tar("./a/test.tar.gz", "./a/test.go")
+	//Tar("./a/test.tar.gz", "./a/test.go")
 }
 
 func TestSSH(t *testing.T) {
