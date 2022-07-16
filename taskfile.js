@@ -8,7 +8,6 @@ task("echo")
     .echo("echo something ")
 
 
-
 task("withNeed")
     .need("echo")
     .echo("is ok?")
@@ -31,9 +30,9 @@ task("withCustomStep")
         t.echo("3")
     })
 
-
-task('default')
-    .echo("run ok")
-
+task("test")
+    .cmd("ls")
 
 
+task("default").
+    cmd("go run main.go test")

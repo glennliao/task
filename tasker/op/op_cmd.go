@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/glennliao/task/tasker/util"
 	"io"
+	"log"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -15,7 +16,7 @@ func init() {
 	AddOp(Op{
 		Name: "cmd",
 		Handler: func(args []string) {
-			color.Green("# %s %v\n", "[cmd]", args[0])
+			color.Green("-# %s %v\n", "[cmd]", args[0])
 			Cmd(args)
 		},
 	})
@@ -40,7 +41,7 @@ func Cmd(args []string) {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -71,13 +72,18 @@ func Cmd(args []string) {
 		panic(err)
 	}
 	err = cmd.Wait()
+
 	if err != nil {
-		panic(err)
+
+		switch err.(type) {
+		case *exec.ExitError:
+			e := err.(*exec.ExitError)
+			log.Println(e.String())
+		default:
+			log.Fatal(err)
+		}
+
 	}
 
 	wg.Wait()
-
-	if err != nil {
-		panic(err)
-	}
 }
