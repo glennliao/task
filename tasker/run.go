@@ -6,15 +6,10 @@ import (
 	"github.com/glennliao/task/tasker/op"
 	"github.com/manifoldco/promptui"
 	"log"
-	"os"
 	"strings"
 )
 
-func (t *Tasker) Run() {
-	taskName := DefaultTask
-	if len(os.Args) > 1 {
-		taskName = os.Args[1]
-	}
+func (t *Tasker) Run(taskName string) {
 
 	task, ok := t.taskMap[taskName]
 
@@ -30,7 +25,8 @@ func (t *Tasker) Run() {
 
 		switch len(matchPrefixTaskList) {
 		case 0:
-			log.Fatal("task no found: " + taskName)
+			logger.Error("task no found: " + taskName)
+
 		case 1:
 			task = matchPrefixTaskList[0]
 		default:
@@ -51,8 +47,7 @@ func (t *Tasker) Run() {
 			_, result, err := prompt.Run()
 
 			if err != nil {
-				fmt.Printf("Prompt failed %v\n", err)
-				log.Fatal(err)
+				logger.ErrorExit(err)
 			}
 
 			if result == "[Cancel]" {
@@ -69,7 +64,7 @@ func (t *Tasker) Run() {
 }
 
 func (t *Tasker) runTask(task *Task) {
-	color.Blue("# task %v\n", task.Name)
+	color.Blue("「 ------- %v ------- 」\n", task.Name)
 	for _, step := range task.Steps {
 		if step.Op == "need" {
 			taskName := step.Args[0]
@@ -79,6 +74,7 @@ func (t *Tasker) runTask(task *Task) {
 			}
 			t.runTask(task)
 		} else {
+			//color.Cyan(" # %d. %-8s %v", i+1, step.Op, step.Args)
 			op.OpsRegisterMap[step.Op].Handler(step.Args)
 		}
 	}

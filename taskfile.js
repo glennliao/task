@@ -37,3 +37,14 @@ task('default')
 
 
 
+task("mv")
+    .mv("example/test.md","example/test.c")
+    .sleep(5)
+    .mv("example/test.c","example/test.md")
+
+task("env")
+    .env({
+        a:1,
+        b:"bstr"
+    })
+    .cmd("node example/echoenv.js",{env:{a:"iam1"}})

@@ -1,10 +1,13 @@
 package tasker
 
 import (
+	"github.com/glennliao/task/tasker/util"
 	"github.com/mitchellh/go-homedir"
 	"os"
 	"path/filepath"
 )
+
+var logger = util.Logger{}
 
 func (t *Tasker) Init(taskerJs string) {
 	dir, _ := homedir.Dir()

@@ -5,7 +5,6 @@ const (
 	ConfigDir              = "tasker"
 	ConfigUseDir           = "use"
 	ConfigTaskerJsFilename = "tasker.js"
-	TaskFileName           = "./taskfile.js"
 	DefaultTask            = "default"
 )
 

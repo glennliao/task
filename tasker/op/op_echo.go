@@ -8,7 +8,7 @@ func init() {
 	AddOp(Op{
 		Name: "echo",
 		Handler: func(args []string) {
-			color.Green("# %v\n", args[0])
+			color.White("%v\n", args[0])
 		},
 	})
 }

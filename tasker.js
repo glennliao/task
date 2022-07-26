@@ -43,8 +43,8 @@ function task(taskName){
             return this
         },
 
-        cmd(cmdStr){
-            _tasker.cmd(cmdStr)
+        cmd(cmdStr,option={}){
+            _tasker.cmd(cmdStr,JSON.stringify(option))
             return this
         },
 
@@ -75,6 +75,18 @@ function task(taskName){
 
         echo(msg){
             _tasker.echo(msg)
+            return this
+        },
+        mv(src,dist){
+            _tasker.mv(src,dist)
+            return this
+        },
+        sleep(sec){
+            _tasker.sleep(sec)
+            return this
+        },
+        env(env){
+            _tasker.env(JSON.stringify(env))
             return this
         }
     }

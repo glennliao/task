@@ -2,10 +2,12 @@ package op
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/glennliao/task/tasker/util"
 	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -15,10 +17,14 @@ func init() {
 	AddOp(Op{
 		Name: "cmd",
 		Handler: func(args []string) {
-			color.Green("# %s %v\n", "[cmd]", args[0])
+			color.Green(" # %s %v\n", "[cmd]", args[0])
 			Cmd(args)
 		},
 	})
+}
+
+type CmdOption struct {
+	Env map[string]any
 }
 
 func Cmd(args []string) {
@@ -28,6 +34,23 @@ func Cmd(args []string) {
 	} else {
 		cmd = exec.Command("bash", "-c", args[0])
 	}
+
+	var cmdOption CmdOption
+
+	if len(args) > 1 {
+		json.Unmarshal([]byte(args[1]), &cmdOption)
+
+	}
+
+	var envs = os.Environ()
+	for k, v := range env {
+		envs = append(envs, fmt.Sprintf("%s=%v", k, v))
+	}
+	for k, v := range cmdOption.Env {
+		envs = append(envs, fmt.Sprintf("%s=%v", k, v))
+	}
+
+	cmd.Env = envs
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -40,7 +63,7 @@ func Cmd(args []string) {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()

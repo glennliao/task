@@ -11,13 +11,13 @@ import (
 	"path/filepath"
 )
 
-func (t *Tasker) Load() bool {
+func (t *Tasker) Load(taskFile string) bool {
 
 	t.taskMap = map[string]*Task{}
 
-	if !util.FileExist(TaskFileName) {
+	if !util.FileExist(taskFile) {
 		prompt := promptui.Select{
-			Label:        "taskfile.js not found... , so ?",
+			Label:        fmt.Sprintf("%s not found..., so ?", taskFile),
 			Items:        []string{"Create It", "Cancel"},
 			HideHelp:     true,
 			HideSelected: true,
@@ -31,7 +31,7 @@ func (t *Tasker) Load() bool {
 		}
 
 		if result == "Create It" {
-			f, err := os.Create(TaskFileName)
+			f, err := os.Create(taskFile)
 			if err != nil {
 				panic(err)
 			}
@@ -43,7 +43,7 @@ func (t *Tasker) Load() bool {
 
 	}
 
-	taskFile, err := util.LoadJsFile(TaskFileName)
+	taskFile, err := util.LoadJsFile(taskFile)
 
 	if err != nil {
 		panic(err)
