@@ -8,6 +8,7 @@ import (
 	"github.com/glennliao/task/tasker/util"
 	"io"
 	"os"
+	"log"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -94,13 +95,18 @@ func Cmd(args []string) {
 		panic(err)
 	}
 	err = cmd.Wait()
+
 	if err != nil {
-		panic(err)
+
+		switch err.(type) {
+		case *exec.ExitError:
+			e := err.(*exec.ExitError)
+			log.Println(e.String())
+		default:
+			log.Fatal(err)
+		}
+
 	}
 
 	wg.Wait()
-
-	if err != nil {
-		panic(err)
-	}
 }
